@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Calistung Menulis</title>
+  <link rel="icon" href="img/logo.png" type="image/gif" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('img/bg2.png') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .game-container {
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+    }
+
+    .instruction {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      color: white; /* Mengubah warna teks menjadi putih */
+    }
+
+    .word-to-type {
+      font-size: 2em;
+      font-weight: bold;
+      color: rgb(136, 135, 135); /* Mengubah warna teks kata menjadi putih */
+      margin-bottom: 20px;
+    }
+
+    .score-text {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: white; /* Menjadikan warna putih */
+    }
+
+    .input-container {
+      margin-bottom: 20px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 10px;
+      font-size: 1.2em;
+      border: 2px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .feedback.correct {
+      color: green;
+    }
+
+    .feedback.wrong {
+      color: red;
+    }
+
+    .next-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .next-button:hover {
+      background-color: #218838;
+    }
+
+    /* Menu Footer - Position fixed at the bottom, centered horizontally */
+    .menu-footer {
+      position: fixed;
+      bottom: 10px;  /* Give a little gap from the bottom */
+      width: 100%;
+      display: flex;
+      justify-content: center; /* Center menu items horizontally */
+      gap: 20px;
+    }
+
+    .menu-item {
+      width: 70px;
+      height: 70px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .menu-item img {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .animated-image {
+      position: absolute;
+      bottom: 70px; /* Menempatkan gambar lebih ke bawah */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 130px;
+      animation: moveSideways 2s infinite alternate;
+    }
+
+    @keyframes moveSideways {
+      0% {
+        transform: translateX(-30px);
+      }
+      100% {
+        transform: translateX(30px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div id="instruction" class="instruction">Tulis kata berikut ini</div>
+    <div id="wordToType" class="word-to-type"></div>
+    <div class="input-container">
+      <input id="textInput" class="text-input" type="text" placeholder="Ketik di sini..." />
+    </div>
+    <div id="feedback" class="feedback"></div>
+    <div id="scoreText" class="score-text" style="display: none;"></div>
+    <button id="nextButton" class="next-button" style="display: none;">Soal Selanjutnya</button>
+  </div>
+
+  <div class="menu-footer">
+    <a href="about.html">
+      <div class="menu-item">
+        <img src="img/about.png" alt="About">
+      </div>
+    </a>
+    <a href="menu.html">
+      <div class="menu-item">
+        <img src="img/home.png" alt="Home">
+      </div>
+    </a>
+    <div class="menu-item" onclick="playMusic()">
+      <img src="img/play.png" alt="Play">
+    </div>
+  </div>
+
+  <audio id="game-music" src="GAME.mp3" loop></audio>
+
+  <script>
+    window.onload = function() {
+      const music = document.getElementById('game-music');
+      music.play();
+    };
+  
+    function playMusic() {
+      const music = document.getElementById('game-music');
+      music.loop = true;
+  
+      if (music.paused) {
+        music.play();
+      } else {
+        music.pause();
+        music.currentTime = 0;
+      }
+    }
+  
+    let words = ["kucing", "rumah", "sekolah", "buku", "apel", "pisang", "cerita", "hujan"];
+    let currentWordIndex = 0;
+    let score = 0;
+  
+    // Mengacak urutan soal
+    words = words.sort(() => Math.random() - 0.5);
+  
+    const wordToTypeElement = document.getElementById("wordToType");
+    const textInputElement = document.getElementById("textInput");
+    const feedbackElement = document.getElementById("feedback");
+    const scoreTextElement = document.getElementById("scoreText");
+  
+    function loadWord() {
+      const word = words[currentWordIndex];
+      wordToTypeElement.textContent = word;
+      textInputElement.value = "";
+      textInputElement.disabled = false;
+      feedbackElement.textContent = "";
+      textInputElement.focus();
+    }
+  
+    function checkAnswer() {
+      const userInput = textInputElement.value.trim().toLowerCase();
+      const correctWord = words[currentWordIndex];
+  
+      if (userInput === correctWord) {
+        feedbackElement.textContent = "Benar!🥳";
+        feedbackElement.classList.add("correct");
+        feedbackElement.classList.remove("wrong");
+        score++;
+        setTimeout(nextWord, 1500);
+      } else {
+        feedbackElement.textContent = `Salah, seharusnya "${correctWord}"😭`;
+        feedbackElement.classList.add("wrong");
+        feedbackElement.classList.remove("correct");
+  
+        setTimeout(() => {
+          window.location.href = "page2.html";
+        }, 1500);
+      }
+  
+      textInputElement.disabled = true;
+    }
+  
+    function nextWord() {
+      currentWordIndex++;
+      if (currentWordIndex < words.length) {
+        loadWord();
+      } else {
+        document.getElementById("instruction").style.display = "none";
+        wordToTypeElement.textContent = `Selamat! Kamu sudah menyelesaikan semua soal.`;
+        scoreTextElement.textContent = `Skor ${score} dari ${words.length}`;
+        scoreTextElement.style.display = "block";
+        textInputElement.style.display = "none";
+        feedbackElement.textContent = "";
+      }
+    }
+  
+    textInputElement.addEventListener("change", checkAnswer);
+  
+    loadWord();
+  </script>  
+</body>
+</html>

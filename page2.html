@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Belajar Ceria</title>
+  <link rel="icon" href="img/logo.png" type="image/gif" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('img/bg3.png') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+   /* Menu Footer - Position fixed at the bottom, centered horizontally */
+   .menu-footer {
+      position: fixed;
+      bottom: 10px;  /* Give a little gap from the bottom */
+      width: 100%;
+      display: flex;
+      justify-content: center; /* Center menu items horizontally */
+      gap: 20px;
+    }
+
+    .menu-item {
+      width: 70px;
+      height: 70px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-item:hover {
+      transform: scale(1.1);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .menu-item img {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* .menu-footer .menu-item {
+      width: 40px;
+      height: 40px;
+    } */
+
+    .animated-image {
+      position: absolute;
+      bottom: 70px; /* Menempatkan gambar lebih ke bawah */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 130px;
+      animation: moveSideways 2s infinite alternate;
+    }
+
+    @keyframes moveSideways {
+      0% {
+        transform: translateX(-30px);
+      }
+      100% {
+        transform: translateX(30px);
+      }
+    }
+
+    .game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .character {
+      position: absolute;
+      bottom: 50px;
+      left: 50px;
+      width: 80px;
+      transition: transform 0.3s, bottom 0.3s;
+    }
+
+    .coin {
+      position: absolute;
+      width: 50px;
+      animation: moveCoin 5s linear infinite;
+    }
+
+    @keyframes moveCoin {
+      0% {
+        top: 0;
+      }
+      100% {
+        top: 100vh;
+      }
+    }
+
+    @keyframes jump {
+      0% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-150px);
+      }
+      100% {
+        transform: translateY(0);
+      }
+    }
+
+    .game-over-popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      padding: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 10px;
+      text-align: center;
+      color: white;
+      display: none;
+    }
+
+    .game-over-popup h1 {
+      margin: 0 0 10px;
+    }
+
+    .game-over-popup button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border: none;
+      background-color: green;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .game-over-popup button:hover {
+      background-color: darkgreen;
+    }
+
+    .coin-counter {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+    }
+
+    .coin-counter img {
+      width: 30px;
+      margin-right: 10px;
+    }
+
+    .timer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: white;
+      font-size: 2em;
+    }
+
+      /* Ubah kecepatan jatuh koin menjadi lebih cepat */
+      @keyframes moveCoin {
+        0% {
+            top: 0;
+        }
+        100% {
+            top: 100vh;
+        }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <img src="img/user.png" alt="Karakter" id="character" class="character">
+    <img src="img/koin.png" alt="Koin" id="coin" class="coin">
+    <div id="gameOverPopup" class="game-over-popup">
+      <h1>Game Over</h1>
+      <p>You collected <span id="finalCoinCount">0</span> coins!</p>
+      <!-- <button onclick="goToNextGame()">Continue</button> -->
+    </div>
+    <!-- <div id="gameOverPopup1" class="game-over-popup">
+      <h1>Game Over</h1>
+      <p>You collected <span id="finalCoinCount">0</span> coins!</p>
+      <button onclick="goToNextGame()">Continue</button>
+    </div> -->
+    <div id="coinCounter" class="coin-counter">
+      <img src="img/koin.png" alt="Coin Icon">
+      <span id="coinCountText">: 0</span>
+    </div>
+    <div id="timer" class="timer">Time: 30</div>
+  </div>
+
+  <div class="menu-footer">
+    <a href="about.html">
+      <div class="menu-item">
+        <img src="img/about.png" alt="About">
+      </div>
+    </a>
+    <a href="menu.html">
+      <div class="menu-item">
+        <img src="img/home.png" alt="Home">
+      </div>
+    </a>
+    <div class="menu-item" onclick="playMusic()">
+      <img src="img/play.png" alt="Play">
+    </div>
+  </div>
+
+  <audio id="gameOverSound" src="GAMEOVER.mp3"></audio>
+
+  <audio id="game-music" src="GAME.mp3" loop></audio>
+
+  <script>
+    // This will automatically start playing the music when the page loads
+    window.onload = function() {
+      const music = document.getElementById('game-music');
+      music.play(); // Play the music automatically
+    };
+    
+      function playMusic() {
+      const music = document.getElementById('game-music');
+      music.loop = true; // Enable looping of the music
+
+      if (music.paused) {
+        music.play();
+      } else {
+        music.pause();
+        music.currentTime = 0; // Restart music if already playing
+      }
+    }
+
+    const character = document.getElementById('character');
+    const coin = document.getElementById('coin');
+    const coinCounter = document.getElementById('coinCounter');
+    const coinCountText = document.getElementById('coinCountText');
+    const timerElement = document.getElementById('timer');
+    const gameOverPopup = document.getElementById('gameOverPopup');
+    const finalCoinCount = document.getElementById('finalCoinCount');
+    let jumping = false;
+    let coinCount = 0;
+    let moving = false;
+    let timer = 30;
+    let gameInterval;
+    let coinInterval;
+
+    function startGame() {
+      coinCount = 0;
+      coinCountText.innerText = ': 0';
+      timer = 30;
+      timerElement.innerText = 'Time: ' + timer;
+      gameOverPopup.style.display = 'none';
+      startTimer();
+      spawnCoins();
+    }
+
+    function startTimer() {
+      gameInterval = setInterval(() => {
+        timer--;
+        timerElement.innerText = 'Time: ' + timer;
+        if (timer <= 0) {
+          clearInterval(gameInterval);
+          clearInterval(coinInterval);
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function spawnCoins() {
+      coinInterval = setInterval(() => {
+        const randomX = Math.random() * (window.innerWidth - 50);
+        const coinClone = document.createElement('img');
+        coinClone.src = 'img/koin.png';
+        coinClone.classList.add('coin');
+        coinClone.style.left = randomX + 'px';
+        coinClone.style.animation = 'moveCoin 5s linear infinite';
+        document.querySelector('.game-container').appendChild(coinClone);
+
+        setTimeout(() => {
+          coinClone.remove();
+        }, 5000);
+      }, 2000);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const currentTop = parseInt(window.getComputedStyle(character).top, 10);
+      const currentLeft = parseInt(window.getComputedStyle(character).left, 10);
+      moving = true;
+
+      if (event.key === 'ArrowUp') {
+        character.style.top = currentTop - moveSpeed + 'px';
+      } else if (event.key === 'ArrowDown') {
+        character.style.top = currentTop + moveSpeed + 'px';
+      } else if (event.key === 'ArrowLeft') {
+        character.style.left = currentLeft - moveSpeed + 'px';
+      } else if (event.key === 'ArrowRight') {
+        character.style.left = currentLeft + moveSpeed + 'px';
+      } else if (event.key === 'Enter' && !jumping) {
+        jump();
+      }
+    });
+
+    document.addEventListener('keyup', () => {
+      moving = false;
+    });
+
+    function jump() {
+      jumping = true;
+      character.style.animation = 'jump 0.6s';
+      setTimeout(() => {
+        character.style.animation = '';
+        jumping = false;
+      }, 600);
+    }
+
+    function collectCoin() {
+      coinCount++;
+      coinCountText.innerText = ': ' + coinCount;
+    }
+
+    function gameOver() {
+    clearInterval(gameInterval);
+    clearInterval(coinInterval);
+    const gameOverSound = document.getElementById('gameOverSound');
+    gameOverSound.play(); // Mainkan suara game over
+    gameOverPopup.style.display = 'block';
+    finalCoinCount.innerText = coinCount;
+  }
+
+  function endGame() {
+    if (timer > 0) return; // Mencegah menampilkan Game Over jika timer masih aktif
+
+    if (!gameOverPopup.style.display || gameOverPopup.style.display === 'none') {
+      // Jika pemain belum game over, alihkan ke reading.html
+      localStorage.setItem('coinCount', coinCount); // Simpan jumlah koin
+      window.location.href = 'write.html';
+    } else {
+      // Jika pemain sudah game over, hanya tampilkan popup
+      const gameOverSound = document.getElementById('gameOverSound');
+      gameOverSound.play();
+      finalCoinCount.innerText = coinCount;
+      gameOverPopup.style.display = 'block';
+    }
+  }
+
+
+    setInterval(() => {
+      const characterBounds = character.getBoundingClientRect();
+      const coinElements = document.querySelectorAll('.coin');
+
+      coinElements.forEach((coinElem) => {
+        const coinBounds = coinElem.getBoundingClientRect();
+
+        if (
+          characterBounds.right > coinBounds.left &&
+          characterBounds.left < coinBounds.right &&
+          characterBounds.bottom > coinBounds.top &&
+          characterBounds.top < coinBounds.bottom
+        ) {
+          if (!moving) {
+            gameOver();
+          } else {
+            collectCoin();
+            coinElem.remove();
+          }
+        }
+      });
+    }, 50);
+
+    function goToNextGame() {
+      localStorage.setItem('coinCount', coinCount); // Simpan jumlah koin ke localStorage
+      window.location.href = 'write.html'; // Pindah ke halaman soal
+    }
+
+    let moveSpeed = 20; // Meningkatkan kecepatan karakter
+
+    function spawnCoins() {
+        coinInterval = setInterval(() => {
+            const randomX = Math.random() * (window.innerWidth - 50);
+            const coinClone = document.createElement('img');
+            coinClone.src = 'img/koin.png';
+            coinClone.classList.add('coin');
+            coinClone.style.left = randomX + 'px';
+            coinClone.style.animation = 'moveCoin 3s linear infinite'; // Mempercepat jatuhnya koin
+            document.querySelector('.game-container').appendChild(coinClone);
+
+            setTimeout(() => {
+                coinClone.remove();
+            }, 3000); // Koin dihapus lebih cepat
+        }, 1000); // Spawn koin lebih cepat
+    }
+    startGame();
+  </script>
+</body>
+</html>
